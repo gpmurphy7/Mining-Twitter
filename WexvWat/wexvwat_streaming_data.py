@@ -1,10 +1,11 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[122]:
 
 import json
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 
@@ -16,6 +17,7 @@ from nltk import bigrams
  
 from collections import Counter
 import re
+from textblob import TextBlob
 
 
 # In[2]:
@@ -45,7 +47,7 @@ dates_df = pd.Series(ones, idx)
 per_minute = dates_df.resample('1Min').sum().fillna(0)
 
 
-# In[6]:
+# In[73]:
 
 plt.figure()
 per_minute.plot()
@@ -146,7 +148,7 @@ wordcloud.to_file("figures/wecxvwat_wordcloud.png")
 search = []
 
 
-# In[22]:
+# In[21]:
 
 with open('data/search_watvwex.json') as f:
     for line in f:
@@ -155,13 +157,13 @@ with open('data/search_watvwex.json') as f:
             search.append(json.loads(line))       
 
 
-# In[23]:
+# In[22]:
 
 for tweet in search:
     tokens.append(tknr.tokenize(tweet['text'].lower()))
 
 
-# In[24]:
+# In[23]:
 
 terms_stop = []
 for i in tokens:
@@ -170,19 +172,19 @@ for i in tokens:
             terms_stop.append(j)
 
 
-# In[25]:
+# In[24]:
 
 words = ''
 for i in terms_stop:
     words = words + i + ' '
 
 
-# In[26]:
+# In[25]:
 
 wordcloud1 = WordCloud(width=600, height=400).generate(words)
 
 
-# In[27]:
+# In[26]:
 
 #Word cloud
 plt.figure(facecolor='k')
@@ -192,6 +194,172 @@ plt.tight_layout(pad=0)
 plt.show()
 plt.savefig("wexvwat.png")
 
+
+# In[29]:
+
+terms_bigram = bigrams(terms_stop)
+
+
+# In[30]:
+
+count_all = Counter()
+
+
+# In[31]:
+
+count_all.update(terms_stop)
+
+
+# In[32]:
+
+print(count_all.most_common(5))
+
+
+# In[33]:
+
+count_all = Counter()
+
+
+# In[34]:
+
+count_all.update(terms_bigram)
+
+
+# In[36]:
+
+print(count_all.most_common(10))
+
+
+# ### Quick Sentiment Analysis
+
+# In[44]:
+
+def get_tweet_sentiment(tweet):
+        '''
+        Utility function to classify sentiment of passed tweet
+        using textblob's sentiment method
+        '''
+        # create TextBlob object of passed tweet text
+        analysis = TextBlob(tweet)
+        # set sentiment
+        if analysis.sentiment.polarity > 0:
+            return 'positive'
+        elif analysis.sentiment.polarity == 0:
+            return 'neutral'
+        else:
+            return 'negative'
+
+
+# In[48]:
+
+for tweet in tweets:
+    tweet['sentiment'] = get_tweet_sentiment(tweet['text'])
+    
+
+
+# In[52]:
+
+tweets[1]['sentiment'], tweets[1]['text']
+
+
+# In[58]:
+
+Counter(tweet_sentiment)
+
+
+# In[59]:
+
+ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
+
+
+# In[60]:
+
+ntweets = [tweet for tweet in tweets if tweet['sentiment'] == 'negative']
+
+
+# In[61]:
+
+print("Positive tweets percentage: {} %".format(100*len(ptweets)/len(tweets)))
+
+
+# In[62]:
+
+print("Negative tweets percentage: {} %".format(100*len(ntweets)/len(tweets)))
+
+
+# In[66]:
+
+print("Positive tweets:")
+for tweet in ptweets[:10]:
+    print(tweet['text'])
+
+
+# In[65]:
+
+print("Negative tweets:")
+for tweet in ntweets[:10]:
+    print(tweet['text'])
+
+
+# In[67]:
+
+def get_tweet_polarity(tweet):
+        analysis = TextBlob(tweet)
+        return analysis.sentiment.polarity
+
+
+# ### Geolocation
+
+# In[104]:
+
+with open('data/search_watvwex.json', 'r') as f:
+    geo_data = {
+        "type": "FeatureCollection",
+        "features": []
+    }
+    for line in f:
+        line = line.strip()
+        if line:
+            tweet = json.loads(line)
+            if tweet['coordinates']:
+                geo_json_feature = {
+                    "type": "Feature",
+                    "geometry": tweet['coordinates'],
+                    "properties": {
+                        "text": tweet['text'],
+                        "created_at": tweet['created_at']
+                }
+            }
+            geo_data['features'].append(geo_json_feature)
+
+with open('geo_data.json', 'w') as fout:
+    fout.write(json.dumps(geo_data, indent=4))
+
+
+# In[106]:
+
+geo_data.keys()
+
+
+# In[132]:
+
+lat_long = []
+for feature in geo_data['features']:
+    lat_long.append(feature['geometry']['coordinates'])
+    
+
+
+# In[144]:
+
+lat_long_df = pd.DataFrame(lat_long, columns = ['lat', 'long'])
+
+
+# In[151]:
+
+lat_long_df.lat.unique(), lat_long_df.long.unique()
+
+
+# Only one geolocation. 
 
 # In[ ]:
 
