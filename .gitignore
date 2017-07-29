@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*/data/
+*.html
+__pycache__/*
+config.py
+*/__pycache__/*
