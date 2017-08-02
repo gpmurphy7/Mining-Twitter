@@ -1,5 +1,5 @@
 '''
-Need to improve this as it seems to not be able to grab a lot of tweets. 
+Extension of the twitter_stream_download to include older tweets that can still be accessed by the API
 '''
 import tweepy
 from tweepy import OAuthHandler
@@ -11,6 +11,7 @@ import config
 import json
 import os
 
+#below copied from twitter_search_download
 parser = argparse.ArgumentParser(description="Twitter Downloader")
 parser.add_argument("-q",
                     "--query",
@@ -35,6 +36,9 @@ api = tweepy.API(auth)
 query = args.query
 max_tweets = int(args.num)
 
+#twitter API only returns max 100 tweets at a time, defaults to 15
+#stack overflow solution:
+#https://stackoverflow.com/questions/22469713/managing-tweepy-api-search
 searched_tweets = []
 last_id = -1
 while len(searched_tweets) < max_tweets:

@@ -1,3 +1,5 @@
+#Code is from the tutorial located here:
+#https://marcobonzanini.com/2015/03/02/mining-twitter-data-with-python-part-1/
 # To run this code, first edit config.py with your configuration, then:
 #
 # mkdir data
